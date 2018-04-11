@@ -1,0 +1,15 @@
+package com.yourcompany.parallel;
+
+import org.junit.runner.RunWith;
+import cucumber.api.CucumberOptions;
+import cucumber.api.junit.Cucumber;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+    monochrome = false,
+    glue = {"com.yourcompany"},
+    features = {"classpath:parallel/features/[FEATURE_FILE_NAME].feature"},
+    format = {"json:target/cucumber-report/[FEATURE_FILE_NAME].json"}
+)
+public class [FEATURE_FILE_NAME] {
+}
