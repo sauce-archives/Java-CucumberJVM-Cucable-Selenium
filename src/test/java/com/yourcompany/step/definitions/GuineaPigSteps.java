@@ -12,7 +12,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import java.io.*;
+import java.net.MalformedURLException;
 import java.util.concurrent.TimeUnit;
 import java.net.URL;
 import java.util.UUID;
@@ -24,63 +24,66 @@ import com.yourcompany.Pages.*;
 import static org.hamcrest.CoreMatchers.containsString;
 
 public class GuineaPigSteps {
-
-	public static final String USERNAME = System.getenv("SAUCE_USERNAME");
-	public static final String ACCESS_KEY = System.getenv("SAUCE_ACCESS_KEY");
-	public static final String URL = "https://" + USERNAME + ":" + ACCESS_KEY + "@ondemand.saucelabs.com:443/wd/hub";
+	public static final String URL = "https://ondemand.saucelabs.com:443/wd/hub";
 	public static WebDriver driver;
-	public static GuineaPigPage page;
+	public static SandboxPage page;
 	public String commentInputText;
 	public String sessionId;
 	public String jobName;
 
 	@Before
-	public void setUp(Scenario scenario) throws Exception {
+	public void setUp(Scenario scenario) {
         DesiredCapabilities caps = new DesiredCapabilities();
 
         caps.setCapability("platform", "Windows 10");
         caps.setCapability("browserName", "chrome");
-        caps.setCapability("version", "65.0");
+        caps.setCapability("version", "72.0");
+		caps.setCapability("username", System.getenv("SAUCE_USERNAME"));
+		caps.setCapability("accessKey", System.getenv("SAUCE_ACCESS_KEY"));
 
         jobName = scenario.getName();
         caps.setCapability("name", jobName);
 
-	    driver = new RemoteWebDriver(new URL(URL), caps);
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		try {
+			driver = new RemoteWebDriver(new URL(URL), caps);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException("URL was mal-formed: " + URL);
+		}
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 
         sessionId = (((RemoteWebDriver) driver).getSessionId()).toString();
 	}
 
 	@Given("^I am on the Guinea Pig homepage$")
-	public void user_is_on_guinea_pig_page() throws Exception {
-		page = GuineaPigPage.visitPage(driver);
+	public void user_is_on_guinea_pig_page() {
+		page = SandboxPage.visitPage(driver);
 	}
 
 	@When("^I click on the link$")
-	public void user_click_on_the_link() throws Exception {
+	public void user_click_on_the_link() {
 		page.followLink();
 	}
 
 	@When("^I submit a comment$")
-	public void user_submit_comment() throws Exception {
+	public void user_submit_comment() {
 		commentInputText = UUID.randomUUID().toString();
 		page.submitComment(commentInputText);
 	}
 
 	@Then("^I should be on another page$")
-	public void new_page_displayed() throws Exception {
+	public void new_page_displayed() {
 		assertFalse(page.isOnPage());
 	}
 
 	@Then("^I should see that comment displayed$")
-	public void comment_displayed() throws Exception {
+	public void comment_displayed() {
 		assertThat(page.getSubmittedCommentText(), containsString(commentInputText));
 	}
 
 	@After
-	public void tearDown(Scenario scenario) throws Exception {
+	public void tearDown(Scenario scenario) {
 		driver.quit();
-		SauceUtils.UpdateResults(USERNAME, ACCESS_KEY, !scenario.isFailed(), sessionId);
+		SauceUtils.UpdateResults(System.getenv("SAUCE_USERNAME"), System.getenv("SAUCE_ACCESS_KEY"), !scenario.isFailed(), sessionId);
 		System.out.println("SauceOnDemandSessionID="+ sessionId + "job-name="+ jobName);
 	}
 }

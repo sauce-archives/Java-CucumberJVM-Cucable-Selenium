@@ -21,8 +21,7 @@ public class SauceUtils {
         return sauceRESTClient;
     }
 
-    public static void UpdateResults(String username, String accessKey, boolean testResults, String sessionId)
-            throws JSONException, IOException {
+    public static void UpdateResults(String username, String accessKey, boolean testResults, String sessionId) {
         SauceREST client = getSauceRestClient(username, accessKey);
         Map<String, Object> updates = new HashMap<String, Object>();
         addBuildNumberToUpdate(updates);
